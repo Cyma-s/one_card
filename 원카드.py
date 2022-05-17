@@ -168,7 +168,7 @@ def start_turn(player):  # 턴 시작
             player.cards += draw_card(decision)
             decision = 0
     else:  # 공격받는 상황이 아님
-
+        pass
 
 
 def add_attack_card(top_card):  # 공격카드 장 수 더함
