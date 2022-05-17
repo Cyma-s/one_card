@@ -196,11 +196,9 @@ def add_attack_card(top_card):  # 공격카드 장 수 더함
 def is_special_card(top_card):  # 특수카드 판단
     global special, turn
     if top_card.special is not None:
-        if top_card.special == 15 and top_card.special == 17:
-            if turn == MY_TURN:
-                turn = MY_TURN
-            else:
-                turn = COM_TURN
+        return True
+    else:
+        return False
 
 
 def is_attack_situation():  # 공격 상황 확인
