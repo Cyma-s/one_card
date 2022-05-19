@@ -172,17 +172,24 @@ def start_turn(player):  # 턴 시작
         if len(available_card) == 0:  # 낼 카드 없음
             player.cards += draw_card(decision)
             return
-        player.put_card(available_card)
+        player.put_card(available_card)  # 카드 냄
         if is_special_card(accrue_card[-1]):  # 맨 위의 카드가 특수카드임
             if accrue_card[-1].number == '7':  # 일시적으로 모양 바꾸기
                 pass
-            else:  # J, K 일 떄 : 턴 바꾸기
-                pass
+            else:  # J, K 일 떄
+                if accrue_card[-1].number == 'K':  # 한 번 더함
+                    available_card = player.return_possible_card(accrue_card[-1])
+                    player.put_card(available_card)
+                elif accrue_card[-1].number == 'J':  # <1 : 1 기준> 한 번 더함
+                    available_card = player.return_possible_card(accrue_card[-1])
+                    player.put_card(available_card)
+                elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
+                    pass
         else:  # 특수카드가 아님
-            if accrue_card[-1].attack is not None:  # 공격카드 일 때
-                add_attack_card(accrue_card[-1])
-            else:  # 공격카드가 아님
-                pass
+            if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
+                add_attack_card(accrue_card[-1])  #  decision 장 수 추가 -> 턴 넘기기
+            else:  # 공격카드가 아님 : 일반 카드
+                    # 턴 넘기기
 
 
 def add_attack_card(top_card):  # 공격카드 장 수 더함
