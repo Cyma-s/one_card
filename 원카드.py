@@ -54,12 +54,18 @@ class Player:  # 플레이어한테 카드 분배
         return attack_possible_card
 
     def return_shield_possible_card(self, upper):  # 방어카드 리스트 리턴해줌
-        shield_possible_card = None
+        shield_possible_card = []
         for i in range(len(self.cards)):  # 모양이 같으면서 숫자가 3이여야 함
             if self.cards[i].number == '3' and (upper.number == 'A' or upper.number == '2'):
                 if self.cards[i].shape == upper.shape:
-                    shield_possible_card = self.cards[i]
+                    shield_possible_card.append(self.cards[i])
         return shield_possible_card
+
+    def check_same_card(self, possible_card, put_index):  # 손에 있는 카드와 낼 수 있는 카드 중 같은 카드 찾기
+        for i in range(len(self.cards)):
+            if self.cards[i].shape == possible_card[put_index].shape and \
+                    self.cards[i].number == possible_card[put_index].number:
+                    return i
 
     def print(self):
         for i in self.cards:
@@ -69,39 +75,41 @@ class Player:  # 플레이어한테 카드 분배
 class User(Player):  # 플레이어 카드 내기
     def put_card(self, possible_put_card):
         print(f"낼 수 있는 카드 : {possible_put_card}")
+        if len(possible_put_card) == 0:
+            self.cards += draw_card(1)
+            return False
         print("카드 한장 먹고 싶으면 100을 입력 하세요")
         while True:
             my_put_card = int(input("낼 카드를 입력 해주세요 : ")) - 1
             if my_put_card == 99:  # 100 입력시 한장 먹기
                 self.cards += draw_card(1)
-                return COM_TURN
+                return False
             if my_put_card >= len(self.cards):
                 print("다시 입력 하세요")
                 continue
             else:  # 낸 카드 손에서 빼서 위에 쌓기
-                for i in range(len(self.cards)):
-                    accrue_card.append(self.cards.pop(my_put_card))
-                    if self.cards[i].shape == possible_put_card[my_put_card].shape and \
-                            self.cards[i].number == possible_put_card[my_put_card].number:
-                        accrue_card.append(self.cards.pop(i))
-                        return COM_TURN
+                index = self.check_same_card(possible_put_card, my_put_card)
+                accrue_card.append(self.cards.pop(index))
+                return True
 
 
 class Computer(Player):  # 컴퓨터 랜덤 카드 내기
     def put_card(self, possible_put_card):  # 컴퓨터 카드 내기
         if len(possible_put_card) == 1:  # 낼 수 있는 카드 한장 일때
-            accrue_card.append(self.cards.pop(0))
-            return MY_TURN
+            index = self.check_same_card(possible_put_card, 0)
+            accrue_card.append(self.cards.pop(index))
+            print(f"컴퓨터가 낸 카드 : {accrue_card[-1]}")
+            return True
         elif len(possible_put_card) == 0:  # 낼 수 있는 카드 없을 때
             self.cards += draw_card(1)
+            print("컴퓨터가 낼 카드가 없습니다. 한장 먹습니다")
+            return False
         else:  # 낼 수 있는 카드가 2장 이상일 때
-            com_put_card = random.randint(0, len(self.cards) - 1)
-            for i in range(len(self.cards)):
-                if self.cards[i].shape == possible_put_card[com_put_card].shape and \
-                        self.cards[i].number == possible_put_card[com_put_card].number:
-                    accrue_card.append(self.cards.pop(i))
-                    print(f"컴퓨터가 낸 카드 : {accrue_card[-1]}")
-            return MY_TURN
+            com_put_card = random.randint(0, len(possible_put_card) - 1)
+            index = self.check_same_card(possible_put_card, com_put_card)
+            accrue_card.append(self.cards.pop(index))
+            print(f"컴퓨터가 낸 카드 : {accrue_card[-1]}")
+            return True
 
 
 accrue_card = []  # 게임 진행 중 플레이어가 카드를 냄으로 누적되는 카드
@@ -169,11 +177,8 @@ def start_turn(player):  # 턴 시작
             decision = 0
     else:  # 공격받는 상황이 아님
         available_card = player.return_possible_card(accrue_card[-1])
-        if len(available_card) == 0:  # 낼 카드 없음
-            player.cards += draw_card(decision)
-            return
-        player.put_card(available_card)  # 카드 냄
-        if is_special_card(accrue_card[-1]):  # 맨 위의 카드가 특수카드임
+        is_put_card = player.put_card(available_card)  # 카드 냄
+        if is_special_card(accrue_card[-1]) and is_put_card:  # 맨 위의 카드가 특수카드임
             if accrue_card[-1].number == '7':  # 일시적으로 모양 바꾸기
                 pass
             else:  # J, K 일 떄
@@ -190,6 +195,7 @@ def start_turn(player):  # 턴 시작
                 add_attack_card(accrue_card[-1])  #  decision 장 수 추가 -> 턴 넘기기
             else:  # 공격카드가 아님 : 일반 카드
                     # 턴 넘기기
+                pass
 
 
 def add_attack_card(top_card):  # 공격카드 장 수 더함
@@ -233,10 +239,13 @@ while True:  # 게임 진행 : 반복되는 함수들
         print("내 카드")
         my_self.print()
         start_turn(my_self)
+        turn = COM_TURN
     elif turn == COM_TURN:
         print("컴퓨터의 턴 입니다")
         print(f"컴퓨터가 먹어야 하는 카드 장 수 : {decision}")
         print(f"컴퓨터가 가지고 있는 카드 장 수 : {len(computer.cards)}")
+        computer.print()
         start_turn(computer)
+        turn = MY_TURN
     print("----------------------------------------------------------------------------")
     end_game()
