@@ -35,30 +35,27 @@ class Player:  # 플레이어한테 카드 분배
 
     def return_possible_card(self, upper):  # 자신의 턴일 때 낼 수 있는 카드 리스트 리턴
         possible_card = []
-        for i in range(len(self.cards)):  # 맨위에 있는 카드와 같은 모양 혹은 숫자 그리고 색이 있을 경우 낼 수 있는 카드 출력
-            if self.cards[i].number == "joker":  # 손에 조커가 있을 때
-                if upper.color == self.cards[i].color:
-                    possible_card.append(self.cards[i])
-            elif upper.number == "joker":  # 바닥에 조커가 있을 때
-                if upper.color == self.cards[i].color:
-                    possible_card.append(self.cards[i])
-            elif upper.shape == self.cards[i].shape or upper.number == self.cards[i].number:  # 조커가 아닐 때
-                possible_card.append(self.cards[i])
+        for my_card in self.cards:  # 맨위에 있는 카드와 같은 모양 혹은 숫자 그리고 색이 있을 경우 낼 수 있는 카드 출력
+            if upper.color == my_card.color:  # 맨위 카드 또는 손에 있는 카드 같을 때
+                if my_card.number == "joker" or upper.number == "joker":  # 맨위 카드 또는 손에 있는 카드 조커일 때
+                    possible_card.append(my_card)
+            elif upper.shape == my_card.shape or upper.number == my_card.number:  # 조커가 아닐 때
+                possible_card.append(my_card)
         return possible_card
 
     def return_attack_possible_card(self, upper):  # 낼 수 있는 공격카드 리스트를 리턴해줌
         attack_possible_card = []
-        for i in range(len(self.cards)):
-            if self.cards[i].attack is not None and self.cards[i].attack >= upper.attack:  # 낼 수 있는 카드 확인
-                attack_possible_card.append(self.cards[i])
+        for my_card in self.cards:
+            if my_card.attack is not None and my_card.attack >= upper.attack:  # 낼 수 있는 카드 확인
+                attack_possible_card.append(my_card)
         return attack_possible_card
 
     def return_shield_possible_card(self, upper):  # 방어카드 리스트 리턴해줌
         shield_possible_card = []
-        for i in range(len(self.cards)):  # 모양이 같으면서 숫자가 3이여야 함
-            if self.cards[i].number == '3' and (upper.number == 'A' or upper.number == '2'):
-                if self.cards[i].shape == upper.shape:
-                    shield_possible_card.append(self.cards[i])
+        for my_card in self.cards:  # 모양이 같으면서 숫자가 3이여야 함
+            if my_card.number == '3' and (upper.number == 'A' or upper.number == '2'):
+                if my_card.shape == upper.shape:
+                    shield_possible_card.append(my_card)
         return shield_possible_card
 
     def check_same_card(self, possible_card, put_index):  # 손에 있는 카드와 낼 수 있는 카드 중 같은 카드 찾기
@@ -95,21 +92,18 @@ class User(Player):  # 플레이어 카드 내기
 
 class Computer(Player):  # 컴퓨터 랜덤 카드 내기
     def put_card(self, possible_put_card):  # 컴퓨터 카드 내기
-        if len(possible_put_card) == 1:  # 낼 수 있는 카드 한장 일때
-            index = self.check_same_card(possible_put_card, 0)
-            accrue_card.append(self.cards.pop(index))
-            print(f"컴퓨터가 낸 카드 : {accrue_card[-1]}")
-            return True
-        elif len(possible_put_card) == 0:  # 낼 수 있는 카드 없을 때
+        if len(possible_put_card) == 0:  # 낼 수 있는 카드 없을 때
             self.cards += draw_card(1)
             print("컴퓨터가 낼 카드가 없습니다. 한장 먹습니다")
             return False
-        else:  # 낼 수 있는 카드가 2장 이상일 때
+        elif len(possible_put_card) == 1:  # 낼 수 있는 카드 한장 일때
+            index = self.check_same_card(possible_put_card, 0)
+        else:   # 낼 수 있는 카드가 2장 이상일 때
             com_put_card = random.randint(0, len(possible_put_card) - 1)
             index = self.check_same_card(possible_put_card, com_put_card)
-            accrue_card.append(self.cards.pop(index))
-            print(f"컴퓨터가 낸 카드 : {accrue_card[-1]}")
-            return True
+        accrue_card.append(self.cards.pop(index))  # 겹침 1
+        print(f"컴퓨터가 낸 카드 : {accrue_card[-1]}")
+        return True
 
 
 accrue_card = []  # 게임 진행 중 플레이어가 카드를 냄으로 누적되는 카드
@@ -119,9 +113,7 @@ computer = Computer([])  # 컴퓨터 카드
 MY_TURN = 1
 COM_TURN = 0
 turn = random.randint(0, 1)
-effect_dic = {'A': 3, '2': 2, '3': 0, '7': 77, 'J': 15, 'Q': 16, 'K': 17, 'black': 5, 'color': 7}  # 공격카드 판단
 decision = 0  # 카드몇장인지  결정함
-special = 0  # 특수 카드 턴 바꿈
 
 
 def make_card():  # 카드 만들기
@@ -137,10 +129,6 @@ def make_card():  # 카드 만들기
     global my_self, computer
     my_self = User(draw_card(5))  # 시작 카드 분배
     computer = Computer(draw_card(5))  # 시작 카드 분배
-
-
-def show_top_card():  # 맨 위의 카드 보여주기
-    print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
 
 
 def draw_card(count):  # 카드 먹이기
@@ -204,7 +192,7 @@ def add_attack_card(top_card):  # 공격카드 장 수 더함
 
 
 def is_special_card(top_card):  # 특수카드 판단
-    global special, turn
+    global turn
     if top_card.special is not None:
         return True
     else:
@@ -229,7 +217,7 @@ def end_game():  # 게임 종료 조건 만들기
 
 make_card()
 while True:  # 게임 진행 : 반복되는 함수들
-    show_top_card()
+    print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
     if turn == MY_TURN:
         print("당신의 턴 입니다")
         print(f"내가 먹어야 하는 카드 장 수 : {decision}")
