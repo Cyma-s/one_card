@@ -166,7 +166,7 @@ def start_turn(player):  # 턴 시작
     else:  # 공격받는 상황이 아님
         available_card = player.return_possible_card(accrue_card[-1])
         is_put_card = player.put_card(available_card)  # 카드 냄
-        if is_special_card(accrue_card[-1]) and is_put_card:  # 맨 위의 카드가 특수카드임, 카드를 냈을 때
+        if accrue_card[-1] is not None and is_put_card:  # 맨 위의 카드가 특수카드임, 카드를 냈을 때
             if accrue_card[-1].number == '7':  # 일시적으로 모양 바꾸기
                 pass
             else:  # J, K 일 떄
@@ -178,25 +178,14 @@ def start_turn(player):  # 턴 시작
                     player.put_card(available_card)
                 elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
                     pass
-        elif is_put_card and not is_special_card(accrue_card[-1]):  # 특수카드가 아님
+        elif is_put_card and not accrue_card[-1].special is None:  # 특수카드가 아님
             if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
                 add_attack_card(accrue_card[-1])  # decision 장 수 추가 -> 턴 넘기기
 
 
 def add_attack_card(top_card):  # 공격카드 장 수 더함
     global decision
-    if top_card.attack is not None:
-        decision = decision + top_card.attack
-    else:
-        return -1
-
-
-def is_special_card(top_card):  # 특수카드 판단
-    global turn
-    if top_card.special is not None:
-        return True
-    else:
-        return False
+    decision += top_card.attack
 
 
 def is_attack_situation():  # 공격 상황 확인
