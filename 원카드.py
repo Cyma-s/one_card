@@ -140,47 +140,47 @@ def draw_card(count):  # 카드 먹이기
 
 def start_turn(player):  # 턴 시작
     global decision
+    choice = 0
     if is_attack_situation():
         attack_card = player.return_attack_possible_card(accrue_card[-1])
         shield_card = player.return_shield_possible_card(accrue_card[-1])
         if len(attack_card) > 0 and len(shield_card) > 0:
             if turn == MY_TURN:
                 choice = int(input("1번 공격, 2번 방어 : "))
-            else:
+            else:  # 컴퓨터 턴
                 choice = random.randint(1, 2)
-            if choice == 1:  # 공격
-                player.put_card(attack_card)
-                add_attack_card(accrue_card[-1])
-            elif choice == 2:  # 방어
-                player.put_card(shield_card)
-                decision = 0
         elif len(attack_card) > 0:  # 공격
-            player.put_card(attack_card)
-            add_attack_card(accrue_card[-1])
+            choice = 1
         elif len(shield_card) > 0:  # 방어
-            player.put_card(shield_card)
-            decision = 0
+            choice = 2
         else:  # 공격X 방어X 쌓인 만큼 먹기
             player.cards += draw_card(decision)
+            decision = 0
+        if choice == 1:  # 공격
+            player.put_card(attack_card)
+            add_attack_card(accrue_card[-1])
+        elif choice == 2:  # 방어
+            player.put_card(shield_card)
             decision = 0
     else:  # 공격받는 상황이 아님
         available_card = player.return_possible_card(accrue_card[-1])
         is_put_card = player.put_card(available_card)  # 카드 냄
-        if accrue_card[-1] is not None and is_put_card:  # 맨 위의 카드가 특수카드임, 카드를 냈을 때
-            if accrue_card[-1].number == '7':  # 일시적으로 모양 바꾸기
-                pass
-            else:  # J, K 일 떄
-                if accrue_card[-1].number == 'K':  # 한 번 더함
-                    available_card = player.return_possible_card(accrue_card[-1])
-                    player.put_card(available_card)
-                elif accrue_card[-1].number == 'J':  # <1 : 1 기준> 한 번 더함
-                    available_card = player.return_possible_card(accrue_card[-1])
-                    player.put_card(available_card)
-                elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
+        if is_put_card:  # 카드를 냄
+            if accrue_card[-1].special is not None:  # 맨 위의 카드가 특수카드임
+                if accrue_card[-1].number == '7':  # 일시적으로 모양 바꾸기
                     pass
-        elif is_put_card and not accrue_card[-1].special is None:  # 특수카드가 아님
-            if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
-                add_attack_card(accrue_card[-1])  # decision 장 수 추가 -> 턴 넘기기
+                else:  # J, K 일 떄
+                    if accrue_card[-1].number == 'K':  # 한 번 더함
+                        available_card = player.return_possible_card(accrue_card[-1])
+                        player.put_card(available_card)
+                    elif accrue_card[-1].number == 'J':  # <1 : 1 기준> 한 번 더함
+                        available_card = player.return_possible_card(accrue_card[-1])
+                        player.put_card(available_card)
+                    elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
+                        pass
+            else:  # 특수카드가 아님
+                if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
+                    add_attack_card(accrue_card[-1])  # decision 장 수 추가 -> 턴 넘기기
 
 
 def add_attack_card(top_card):  # 공격카드 장 수 더함
