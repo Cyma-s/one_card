@@ -16,7 +16,7 @@ class Card:  # 색, 모양, 숫자
             self.attack = self.attack_card[number]
         if self.number in self.special_card:
             self.special = self.special_card[number]
-        if shape == '♠' or shape == '♣' or shape == "black":  # 색 정하기
+        if shape == '♠' or shape == '♣' or number == "black":  # 색 정하기
             self.color = "black"
         else:
             self.color = "color"
@@ -36,17 +36,22 @@ class Player:  # 플레이어한테 카드 분배
     def return_possible_card(self, upper):  # 자신의 턴일 때 낼 수 있는 카드 리스트 리턴
         possible_card = []
         for my_card in self.cards:  # 맨위에 있는 카드와 같은 모양 혹은 숫자 그리고 색이 있을 경우 낼 수 있는 카드 출력
-            if upper.color == my_card.color:  # 맨위 카드 또는 손에 있는 카드 같을 때
-                if my_card.number == "joker" or upper.number == "joker":  # 맨위 카드 또는 손에 있는 카드 조커일 때
+            if upper.color == my_card.color:  # 맨위 카드 와 손에 있는 카드 색 같을 때
+                if my_card.shape == "joker" or upper.shape == "joker":  # 맨위 카드 또는 손에 있는 카드 조커일 때
                     possible_card.append(my_card)
-            elif upper.shape == my_card.shape or upper.number == my_card.number:  # 조커가 아닐 때
+            if upper.shape == my_card.shape or upper.number == my_card.number:  # 조커가 아닐 때 and 모양 또는 숫자 같을 때
+                if upper.shape == "joker" and upper.color == "color":  # 맨 위 카드가 컬러 조커일 때 못 막음
+                    continue
                 possible_card.append(my_card)
+
         return possible_card
 
     def return_attack_possible_card(self, upper):  # 낼 수 있는 공격카드 리스트를 리턴해줌
         attack_possible_card = []
         for my_card in self.cards:
-            if my_card.attack is not None and my_card.attack >= upper.attack:  # 낼 수 있는 카드 확인
+            if my_card.attack is not None and my_card.attack >= upper.attack:  # 낼 수 있는 카드 확인 : 더 센 카드만 낼 수 있음
+                if my_card.shape == "joker" and upper.color != my_card.color:  # 손에 있는 조커와 맨 위 카드 색이 다르면 못냄
+                    continue
                 attack_possible_card.append(my_card)
         return attack_possible_card
 
@@ -62,7 +67,7 @@ class Player:  # 플레이어한테 카드 분배
         for i in range(len(self.cards)):
             if self.cards[i].shape == possible_card[put_index].shape and \
                     self.cards[i].number == possible_card[put_index].number:
-                    return i
+                return i
 
     def print(self):
         for i in self.cards:
@@ -74,12 +79,14 @@ class User(Player):  # 플레이어 카드 내기
         print(f"낼 수 있는 카드 : {possible_put_card}")
         if len(possible_put_card) == 0:
             self.cards += draw_card(1)
+            print("낼 카드가 없어 한 장을 먹습니다")
             return False
         print("카드 한장 먹고 싶으면 100을 입력 하세요")
         while True:
             my_put_card = int(input("낼 카드를 입력 해주세요 : ")) - 1
             if my_put_card == 99:  # 100 입력시 한장 먹기
                 self.cards += draw_card(1)
+                print("카드를 내고 싶지 않아 한 장을 먹습니다")
                 return False
             if my_put_card >= len(self.cards):
                 print("다시 입력 하세요")
@@ -87,6 +94,7 @@ class User(Player):  # 플레이어 카드 내기
             else:  # 낸 카드 손에서 빼서 위에 쌓기
                 index = self.check_same_card(possible_put_card, my_put_card)
                 accrue_card.append(self.cards.pop(index))
+                print(f"플레이어가 낸 카드 : {accrue_card[-1]}")
                 return True
 
 
@@ -98,7 +106,7 @@ class Computer(Player):  # 컴퓨터 랜덤 카드 내기
             return False
         elif len(possible_put_card) == 1:  # 낼 수 있는 카드 한장 일때
             index = self.check_same_card(possible_put_card, 0)
-        else:   # 낼 수 있는 카드가 2장 이상일 때
+        else:  # 낼 수 있는 카드가 2장 이상일 때
             com_put_card = random.randint(0, len(possible_put_card) - 1)
             index = self.check_same_card(possible_put_card, com_put_card)
         accrue_card.append(self.cards.pop(index))  # 겹침 1
@@ -133,9 +141,18 @@ def make_card():  # 카드 만들기
 
 def draw_card(count):  # 카드 먹이기
     new_list = []
+    if count >= len(card):  # 먹일 카드가 없음
+        mix_card()
     for i in range(count):
         new_list.append(card.pop(0))
     return new_list
+
+
+def mix_card():  # 쌓인 카드 섞기
+    global accrue_card
+    for i in range(len(accrue_card) - 1):
+        card.append(accrue_card[i])
+    accrue_card = [accrue_card[-1]]
 
 
 def start_turn(player):  # 턴 시작
@@ -154,6 +171,7 @@ def start_turn(player):  # 턴 시작
         elif len(shield_card) > 0:  # 방어
             choice = 2
         else:  # 공격X 방어X 쌓인 만큼 먹기
+            print(f"방어 하지 못해 {decision} 장을 먹습니다")
             player.cards += draw_card(decision)
             decision = 0
         if choice == 1:  # 공격
@@ -171,11 +189,11 @@ def start_turn(player):  # 턴 시작
                     pass
                 else:  # J, K 일 떄
                     if accrue_card[-1].number == 'K':  # 한 번 더함
-                        available_card = player.return_possible_card(accrue_card[-1])
-                        player.put_card(available_card)
+                        start_turn(player)
                     elif accrue_card[-1].number == 'J':  # <1 : 1 기준> 한 번 더함
-                        available_card = player.return_possible_card(accrue_card[-1])
-                        player.put_card(available_card)
+                        start_turn(player)
+                        #available_card = player.return_possible_card(accrue_card[-1])
+                        #player.put_card(available_card)
                     elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
                         pass
             else:  # 특수카드가 아님
