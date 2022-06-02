@@ -1,6 +1,7 @@
 # ◆ ♠ ♥ ♣ / A 2 3 4 5 6 7 8 9 10 J Q K joker(black,color) 54장
 # A◆
 import random
+import keyboard
 
 
 class Card:  # 색, 모양, 숫자
@@ -77,6 +78,8 @@ class Player:  # 플레이어한테 카드 분배
 class User(Player):  # 플레이어 카드 내기
     def put_card(self, possible_put_card):
         print(f"낼 수 있는 카드 : {possible_put_card}")
+        if accrue_card[-1] == '7':  # 추가된 if문
+
         if len(possible_put_card) == 0:
             self.cards += draw_card(1)
             print("낼 카드가 없어 한 장을 먹습니다")
@@ -186,7 +189,8 @@ def start_turn(player):  # 턴 시작
         if is_put_card:  # 카드를 냄
             if accrue_card[-1].special is not None:  # 맨 위의 카드가 특수카드임
                 if accrue_card[-1].number == '7':  # 일시적으로 모양 바꾸기
-                    pass
+
+                    seven_card()
                 else:  # J, K 일 떄
                     if accrue_card[-1].number == 'K':  # 한 번 더함
                         start_turn(player)
@@ -222,9 +226,26 @@ def end_game():  # 게임 종료 조건 만들기
         exit(1)
 
 
+def seven_card():  # 7을 냈을 때 모양 변환
+    global change_shape, change_number
+    shape = ('◆', '♠', '♥', '♣')
+    change_number = accrue_card[-1].number
+    if turn == MY_TURN:
+        choice_shape = int(input())
+    else:
+        choice_shape = random.randint(0, 3)
+    change_shape = shape[choice_shape]
+    print(f"바뀐 모양 : {change_shape, change_number}")
+    # --> 모양 선택 완료, 번호도 가져옴
+    # 턴 넘겨야 함
+
+
 make_card()
 while True:  # 게임 진행 : 반복되는 함수들
-    print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
+    if accrue_card[-1].number == '7':
+        print(f"7카드에 의해 바뀌어 있는 카드 : {change_shape, change_number}")
+    else:
+        print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
     if turn == MY_TURN:
         print("당신의 턴 입니다")
         print(f"내가 먹어야 하는 카드 장 수 : {decision}")
@@ -241,3 +262,8 @@ while True:  # 게임 진행 : 반복되는 함수들
         turn = MY_TURN
     print("----------------------------------------------------------------------------")
     end_game()
+
+
+    '''while True:
+        if keyboard.read_key(''):
+            break'''
