@@ -1,12 +1,12 @@
 # ◆ ♠ ♥ ♣ / A 2 3 4 5 6 7 8 9 10 J Q K joker(black,color) 54장
 # A◆
 import random
-import keyboard
 
 
 class Card:  # 색, 모양, 숫자
     attack_card = {'A': 3, '2': 2, 'black': 5, 'color': 7}
     special_card = {'7': 77, 'J': 15, 'K': 17}  # Q 빠짐
+    shape = ('◆', '♠', '♥', '♣')
 
     def __init__(self, shape, number):  # 모양이랑 숫자를 받음
         self.shape = shape  # 모양
@@ -33,6 +33,7 @@ class Player:  # 플레이어한테 카드 분배
     # 카드 내기
     def __init__(self, cards):  # 각 플레이어에게 카드 분배
         self.cards = cards
+
     def return_possible_card(self, upper):  # 자신의 턴일 때 낼 수 있는 카드 리스트 리턴
         possible_card = []
         for my_card in self.cards:  # 맨위에 있는 카드와 같은 모양 혹은 숫자 그리고 색이 있을 경우 낼 수 있는 카드 출력
@@ -76,7 +77,7 @@ class Player:  # 플레이어한테 카드 분배
 
 class User(Player):  # 플레이어 카드 내기
     def put_card(self, possible_put_card):
-        global seven_flag
+        global is_change_seven_card
         print(f"낼 수 있는 카드 : {possible_put_card}")
         if len(possible_put_card) == 0:
             self.cards += draw_card(1)
@@ -95,15 +96,14 @@ class User(Player):  # 플레이어 카드 내기
             else:  # 낸 카드 손에서 빼서 위에 쌓기
                 index = self.check_same_card(possible_put_card, my_put_card)
                 accrue_card.append(self.cards.pop(index))
-                seven_flag = 1
+                is_change_seven_card = False
                 print(f"플레이어가 낸 카드 : {accrue_card[-1]}")
                 return True
 
 
     def choice_seven_card_shape(self):  # 7내고 모양 선택하기
-        global choice_shape, change_card
+        global change_card
         change_card = None
-        shape = ('◆', '♠', '♥', '♣')
         print("바꿀 모양을 선택해 주세요")
         print("1 : ◆, 2 : ♠, 3 : ♥, 4 : ♣")
         while True:
@@ -113,34 +113,33 @@ class User(Player):  # 플레이어 카드 내기
                 continue
             else:
                 break
-        change_card = Card(shape[choice_shape], '7')
+        change_card = Card(Card.shape[choice_shape], '7')
         print(f"바뀐 모양 : {change_card}")
 
 
 class Computer(Player):  # 컴퓨터 랜덤 카드 내기
     def put_card(self, possible_put_card):  # 컴퓨터 카드 내기
-        global seven_flag
+        global is_change_seven_card
         if len(possible_put_card) == 0:  # 낼 수 있는 카드 없을 때
             self.cards += draw_card(1)
             print("컴퓨터가 낼 카드가 없습니다. 한장 먹습니다")
             return False
         elif len(possible_put_card) == 1:  # 낼 수 있는 카드 한장 일때
             index = self.check_same_card(possible_put_card, 0)
-            seven_flag = 1
+            is_change_seven_card = False
         else:  # 낼 수 있는 카드가 2장 이상일 때
             com_put_card = random.randint(0, len(possible_put_card) - 1)
             index = self.check_same_card(possible_put_card, com_put_card)
-            seven_flag = 1
+            is_change_seven_card = False
         accrue_card.append(self.cards.pop(index))  # 겹침 1
         print(f"컴퓨터가 낸 카드 : {accrue_card[-1]}")
         return True
 
     def choice_seven_card_shape(self):
-        global choice_shape, change_card
+        global change_card
         change_card = None
-        shape = ('◆', '♠', '♥', '♣')
         choice_shape = random.randint(1, 4) - 1
-        change_card = Card(shape[choice_shape], '7')
+        change_card = Card(Card.shape[choice_shape], '7')
         print(f"바뀐 모양 : {change_card}")
         # --> 모양 선택 완료, 번호도 가져옴
         # 턴 넘겨야 함
@@ -154,18 +153,15 @@ MY_TURN = 1
 COM_TURN = 0
 turn = random.randint(0, 1)
 decision = 0  # 카드몇장인지  결정함
-change_shape = 0
-change_number = 0
 change_card = None
-choice_shape = 0
-seven_flag = 1
+is_change_seven_card = False
+
 
 def make_card():  # 카드 만들기
     print("게임을 시작합니다!")
-    shape = ('◆', '♠', '♥', '♣')
     num = ('A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K')
     num = tuple(map(str, num))
-    for i in shape:
+    for i in Card.shape:
         for j in num:
             card.append(Card(i, j))  # Card 클래스로 넘겨줌
     random.shuffle(card)  # 카드 섞기
@@ -177,8 +173,6 @@ def make_card():  # 카드 만들기
 
 def draw_card(count):  # 카드 먹이기
     new_list = []
-    # if 10 == len(card):  # 먹일 카드가 없음
-        # mix_card()
     for i in range(count):
         new_list.append(card.pop(0))
         if len(card) == 0:
@@ -219,8 +213,8 @@ def start_turn(player):  # 턴 시작
             player.put_card(shield_card)
             decision = 0
     else:  # 공격받는 상황이 아님
-        global seven_flag
-        if seven_flag == 0:
+        global is_change_seven_card
+        if is_change_seven_card:
             available_card = player.return_possible_card(change_card)
         else:
             available_card = player.return_possible_card(accrue_card[-1])
@@ -229,7 +223,7 @@ def start_turn(player):  # 턴 시작
             if accrue_card[-1].special is not None:  # 맨 위의 카드가 특수카드임
                 if accrue_card[-1].number == '7':  # 일시적으로 모양 바꾸기
                     player.choice_seven_card_shape()
-                    seven_flag = 0
+                    is_change_seven_card = True
                 else:  # J, K 일 떄
                     if accrue_card[-1].number == 'K':  # 한 번 더함
                         start_turn(player)
@@ -264,15 +258,12 @@ def end_game():  # 게임 종료 조건 만들기
         print("컴퓨터가 승리하였습니다!")
         exit(1)
 
-    # --> 모양 선택 완료, 번호도 가져옴
-    # 턴 넘겨야 함
-
 
 make_card()
 while True:  # 게임 진행 : 반복되는 함수들
-    if seven_flag == 0:
+    if is_change_seven_card:
         print(f"7카드에 의해 바뀌어 있는 카드 : {change_card}")
-    elif seven_flag == 1:
+    else:
         print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
     if turn == MY_TURN:
         print("당신의 턴 입니다")
@@ -290,8 +281,3 @@ while True:  # 게임 진행 : 반복되는 함수들
         turn = MY_TURN
     print("----------------------------------------------------------------------------")
     end_game()
-
-
-    '''while True:
-        if keyboard.read_key(''):
-            break'''
