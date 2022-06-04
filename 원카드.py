@@ -33,7 +33,6 @@ class Player:  # 플레이어한테 카드 분배
     # 카드 내기
     def __init__(self, cards):  # 각 플레이어에게 카드 분배
         self.cards = cards
-
     def return_possible_card(self, upper):  # 자신의 턴일 때 낼 수 있는 카드 리스트 리턴
         possible_card = []
         for my_card in self.cards:  # 맨위에 있는 카드와 같은 모양 혹은 숫자 그리고 색이 있을 경우 낼 수 있는 카드 출력
@@ -81,8 +80,6 @@ class User(Player):  # 플레이어 카드 내기
         print(f"낼 수 있는 카드 : {possible_put_card}")
         if len(possible_put_card) == 0:
             self.cards += draw_card(1)
-            if accrue_card[-1].number == '7':  # 추가된 if문
-                seven_flag = 1
             print("낼 카드가 없어 한 장을 먹습니다")
             return False
         print("카드 한장 먹고 싶으면 100을 입력 하세요")
@@ -91,8 +88,6 @@ class User(Player):  # 플레이어 카드 내기
             if my_put_card == 99:  # 100 입력시 한장 먹기
                 self.cards += draw_card(1)
                 print("카드를 내고 싶지 않아 한 장을 먹습니다")
-                if accrue_card[-1].number == '7':  # 추가된 if문
-                    seven_flag = 1
                 return False
             if my_put_card >= len(self.cards):
                 print("다시 입력 하세요")
@@ -100,12 +95,14 @@ class User(Player):  # 플레이어 카드 내기
             else:  # 낸 카드 손에서 빼서 위에 쌓기
                 index = self.check_same_card(possible_put_card, my_put_card)
                 accrue_card.append(self.cards.pop(index))
+                seven_flag = 1
                 print(f"플레이어가 낸 카드 : {accrue_card[-1]}")
                 return True
 
+
     def choice_seven_card_shape(self):  # 7내고 모양 선택하기
         global choice_shape, change_card
-        change_card = []
+        change_card = None
         shape = ('◆', '♠', '♥', '♣')
         print("바꿀 모양을 선택해 주세요")
         print("1 : ◆, 2 : ♠, 3 : ♥, 4 : ♣")
@@ -116,9 +113,7 @@ class User(Player):  # 플레이어 카드 내기
                 continue
             else:
                 break
-        i = accrue_card[-1].number
-        change_card.append(shape[choice_shape])
-        change_card.append(i)
+        change_card = Card(shape[choice_shape], '7')
         print(f"바뀐 모양 : {change_card}")
 
 
@@ -128,26 +123,24 @@ class Computer(Player):  # 컴퓨터 랜덤 카드 내기
         if len(possible_put_card) == 0:  # 낼 수 있는 카드 없을 때
             self.cards += draw_card(1)
             print("컴퓨터가 낼 카드가 없습니다. 한장 먹습니다")
-            if accrue_card[-1].number == '7':  # 추가된 if문
-                seven_flag = 1
             return False
         elif len(possible_put_card) == 1:  # 낼 수 있는 카드 한장 일때
             index = self.check_same_card(possible_put_card, 0)
+            seven_flag = 1
         else:  # 낼 수 있는 카드가 2장 이상일 때
             com_put_card = random.randint(0, len(possible_put_card) - 1)
             index = self.check_same_card(possible_put_card, com_put_card)
+            seven_flag = 1
         accrue_card.append(self.cards.pop(index))  # 겹침 1
         print(f"컴퓨터가 낸 카드 : {accrue_card[-1]}")
         return True
 
     def choice_seven_card_shape(self):
         global choice_shape, change_card
-        change_card = []
+        change_card = None
         shape = ('◆', '♠', '♥', '♣')
         choice_shape = random.randint(1, 4) - 1
-        i = accrue_card[-1].number
-        change_card.append(shape[choice_shape])
-        change_card.append(i)
+        change_card = Card(shape[choice_shape], '7')
         print(f"바뀐 모양 : {change_card}")
         # --> 모양 선택 완료, 번호도 가져옴
         # 턴 넘겨야 함
@@ -163,7 +156,7 @@ turn = random.randint(0, 1)
 decision = 0  # 카드몇장인지  결정함
 change_shape = 0
 change_number = 0
-change_card = []
+change_card = None
 choice_shape = 0
 seven_flag = 1
 
@@ -227,7 +220,10 @@ def start_turn(player):  # 턴 시작
             decision = 0
     else:  # 공격받는 상황이 아님
         global seven_flag
-        available_card = player.return_possible_card(accrue_card[-1])
+        if seven_flag == 0:
+            available_card = player.return_possible_card(change_card)
+        else:
+            available_card = player.return_possible_card(accrue_card[-1])
         is_put_card = player.put_card(available_card)  # 카드 냄
         if is_put_card:  # 카드를 냄
             if accrue_card[-1].special is not None:  # 맨 위의 카드가 특수카드임
