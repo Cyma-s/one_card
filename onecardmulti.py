@@ -158,6 +158,28 @@ change_card = None
 is_change_seven_card = False
 
 
+def play_member():  # 인원수 정하기
+    global human, AI
+    print("플레이 할 인원을 정합니다")
+    print("플레이 인원은 사람과 AI를 합쳐서 2~5명 입니다")
+    print("플레이 할 사람 인원수를 입력해 주세요 : ")
+    while True:
+        human = int(input())
+        if human <= 1 or human >= 6:
+            continue
+        else:
+            break
+    print(f"선택 가능한 인원수 : {5 - human}")
+    if (5 - human) > 0:
+        while True:
+            AI = int(input())
+            if AI < 0 or AI > (5 - human):
+                continue
+            else:
+                break
+    print(f"게임을 플레이 할 총 인원수는 : 사람{human}명, AI{AI}명 입니다")
+
+
 def make_card():  # 카드 만들기
     print("게임을 시작합니다!")
     num = ('A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K')
