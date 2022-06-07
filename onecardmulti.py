@@ -77,6 +77,10 @@ class Player:  # 플레이어한테 카드 분배
 
 
 class User(Player):  # 플레이어 카드 내기
+    def __init__(self, cards):
+        super().__init__(cards)
+        self.is_user = True
+
     def put_card(self, possible_put_card):
         global is_change_seven_card
         print(f"낼 수 있는 카드 : {possible_put_card}")
@@ -101,7 +105,6 @@ class User(Player):  # 플레이어 카드 내기
                 print(f"플레이어가 낸 카드 : {accrue_card[-1]}")
                 return True
 
-
     def choice_seven_card_shape(self):  # 7내고 모양 선택하기
         global change_card
         change_card = None
@@ -119,6 +122,10 @@ class User(Player):  # 플레이어 카드 내기
 
 
 class Computer(Player):  # 컴퓨터 랜덤 카드 내기
+    def __init__(self, cards):
+        super().__init__(cards)
+        self.is_user = False
+
     def put_card(self, possible_put_card):  # 컴퓨터 카드 내기
         global is_change_seven_card
         if len(possible_put_card) == 0:  # 낼 수 있는 카드 없을 때
@@ -147,58 +154,55 @@ class Computer(Player):  # 컴퓨터 랜덤 카드 내기
 
 
 accrue_card = []  # 게임 진행 중 플레이어가 카드를 냄으로 누적되는 카드
-card = [Card('joker', 'black'), Card('joker', 'color')]  # 게임 시작 초기 덱
-my_self = User([])  # 내 카드
-computer = Computer([])  # 컴퓨터 카드
-MY_TURN = 1
-COM_TURN = 0
-turn = random.randint(0, 1)
+deck = [Card('joker', 'black'), Card('joker', 'color')]  # 게임 시작 초기 덱
 decision = 0  # 카드몇장인지  결정함
 change_card = None
 is_change_seven_card = False
+play_member = []
 
 
-def play_member():  # 인원수 정하기
-    global human, AI
+def set_player_number():  # 인원수 정하기
     print("플레이 할 인원을 정합니다")
     print("플레이 인원은 사람과 AI를 합쳐서 2~5명 입니다")
-    print("플레이 할 사람 인원수를 입력해 주세요 : ")
+    print("플레이 할 사람 인원수를 입력해 주세요")
     while True:
         human = int(input())
-        if human <= 1 or human >= 6:
-            continue
-        else:
+        if 1 <= human <= 5:
             break
-    print(f"선택 가능한 인원수 : {5 - human}")
-    if (5 - human) > 0:
+    print(f"AI 선택 가능한 인원수 : {5 - human}")
+    if human == 5:
+        ai = 0
+    else:
         while True:
-            AI = int(input())
-            if AI < 0 or AI > (5 - human):
-                continue
-            else:
+            ai = int(input())
+            if 0 <= ai <= (5 - human):
                 break
-    print(f"게임을 플레이 할 총 인원수는 : 사람{human}명, AI{AI}명 입니다")
+    print(f"게임을 플레이 할 총 인원수는 : 사람{human}명, AI {ai}명 입니다")
+    return human, ai
 
 
-def make_card():  # 카드 만들기
+def make_card(human, ai):  # 카드 만들기
+    global play_member
     print("게임을 시작합니다!")
     num = ('A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K')
     num = tuple(map(str, num))
     for i in Card.shape:
         for j in num:
-            card.append(Card(i, j))  # Card 클래스로 넘겨줌
-    random.shuffle(card)  # 카드 섞기
-    accrue_card.append(card.pop(0))
-    global my_self, computer
-    my_self = User(draw_card(5))  # 시작 카드 분배
-    computer = Computer(draw_card(5))  # 시작 카드 분배
+            deck.append(Card(i, j))  # Card 클래스로 넘겨줌
+    random.shuffle(deck)  # 카드 섞기
+    accrue_card.append(deck.pop(0))
+    for i in range(human):
+        play_member.append(User(draw_card(5)))
+    for i in range(ai):
+        play_member.append(Computer(draw_card(5)))
+    random.shuffle(play_member)
 
 
 def draw_card(count):  # 카드 먹이기
     new_list = []
     for i in range(count):
-        new_list.append(card.pop(0))
-        if len(card) == 0:
+        new_list.append(deck.pop(0))
+        if len(deck) == 0:
             mix_card()
     return new_list
 
@@ -206,7 +210,7 @@ def draw_card(count):  # 카드 먹이기
 def mix_card():  # 쌓인 카드 섞기
     global accrue_card
     for i in range(len(accrue_card) - 1):
-        card.append(accrue_card[i])
+        deck.append(accrue_card[i])
     accrue_card = [accrue_card[-1]]
 
 
@@ -255,7 +259,7 @@ def start_turn(player):  # 턴 시작
                         # available_card = player.return_possible_card(accrue_card[-1])
                         # player.put_card(available_card)
                     elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
-                        pass
+                        pass  # todo
             else:  # 특수카드가 아님
                 if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
                     add_attack_card(accrue_card[-1])  # decision 장 수 추가 -> 턴 넘기기
@@ -282,7 +286,8 @@ def end_game():  # 게임 종료 조건 만들기
         exit(1)
 
 
-make_card()
+human_number, ai_number = set_player_number()
+make_card(human_number, ai_number)
 while True:  # 게임 진행 : 반복되는 함수들
     if is_change_seven_card:
         print(f"7카드에 의해 바뀌어 있는 카드 : {change_card}")
