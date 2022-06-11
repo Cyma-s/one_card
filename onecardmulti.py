@@ -77,9 +77,10 @@ class Player:  # 플레이어한테 카드 분배
 
 
 class User(Player):  # 플레이어 카드 내기
-    def __init__(self, cards):
+    def __init__(self, cards, user_name):
         super().__init__(cards)
         self.is_user = True
+        self.user_name = user_name
 
     def put_card(self, possible_put_card):
         global is_change_seven_card
@@ -122,9 +123,10 @@ class User(Player):  # 플레이어 카드 내기
 
 
 class Computer(Player):  # 컴퓨터 랜덤 카드 내기
-    def __init__(self, cards):
+    def __init__(self, cards, user_name):
         super().__init__(cards)
         self.is_user = False
+        self.user_name = user_name
 
     def put_card(self, possible_put_card):  # 컴퓨터 카드 내기
         global is_change_seven_card
@@ -181,7 +183,7 @@ def set_player_number():  # 인원수 정하기
     return human, ai
 
 
-def make_card(human, ai):  # 카드 만들기
+def initialize(human, ai):  # 카드 셋팅, 플레이어 셋팅
     global play_member
     print("게임을 시작합니다!")
     num = ('A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K')
@@ -192,9 +194,12 @@ def make_card(human, ai):  # 카드 만들기
     random.shuffle(deck)  # 카드 섞기
     accrue_card.append(deck.pop(0))
     for i in range(human):
-        play_member.append(User(draw_card(5)))
+        name = input(f'{i}번째 플레이어 이름을 입력해 주세요')
+        play_member.append(User(draw_card(5), name))
+
     for i in range(ai):
-        play_member.append(Computer(draw_card(5)))
+        name = "ai" + str(i)
+        play_member.append(Computer(draw_card(5), name))
     random.shuffle(play_member)
 
 
@@ -278,21 +283,25 @@ def is_attack_situation():  # 공격 상황 확인
 
 
 def end_game():  # 게임 종료 조건 만들기
-    if len(my_self.cards) == 0 or len(computer.cards) >= 20:
-        print("승리하였습니다!")
-        exit(1)
-    elif len(my_self.cards) >= 20 or len(computer.cards) == 0:
-        print("컴퓨터가 승리하였습니다!")
-        exit(1)
+    global deck
+    for i in range(len(play_member)):
+        if len(play_member[i].cards) == 0:  # 이기는 경우
+            print(f"{play_member[i].user_name}님이 승리 하였습니다")
+            exit(0)
+        elif len(play_member[i].cards) >= 17:  # 지는 경우
+            print(f"{play_member[i].user_name} 님이 탈락 하셨습니다")
+            deck += play_member[i].cards
+            play_member.pop(i)
+            print(f"나머지 {len(play_member)} 명이서 게임을 진행합니다")
 
 
 human_number, ai_number = set_player_number()
-make_card(human_number, ai_number)
+initialize(human_number, ai_number)
 while True:  # 게임 진행 : 반복되는 함수들
     if is_change_seven_card:
         print(f"7카드에 의해 바뀌어 있는 카드 : {change_card}")
     else:
-        print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
+         print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
     if turn == MY_TURN:
         print("당신의 턴 입니다")
         print(f"내가 먹어야 하는 카드 장 수 : {decision}")
@@ -311,3 +320,6 @@ while True:  # 게임 진행 : 반복되는 함수들
     os.system("cls")
     print("----------------------------------------------------------------------------")
     end_game()
+
+
+
