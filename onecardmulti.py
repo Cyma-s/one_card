@@ -196,7 +196,6 @@ def initialize(human, ai):  # 카드 셋팅, 플레이어 셋팅
     for i in range(human):
         name = input(f'{i}번째 플레이어 이름을 입력해 주세요')
         play_member.append(User(draw_card(5), name))
-
     for i in range(ai):
         name = "ai" + str(i)
         play_member.append(Computer(draw_card(5), name))
@@ -226,7 +225,7 @@ def start_turn(player):  # 턴 시작
         attack_card = player.return_attack_possible_card(accrue_card[-1])
         shield_card = player.return_shield_possible_card(accrue_card[-1])
         if len(attack_card) > 0 and len(shield_card) > 0:
-            if turn == MY_TURN:
+            if player.is_user:  # 유저 턴 인지 확인
                 choice = int(input("1번 공격, 2번 방어 : "))
             else:  # 컴퓨터 턴
                 choice = random.randint(1, 2)
@@ -297,29 +296,18 @@ def end_game():  # 게임 종료 조건 만들기
 
 human_number, ai_number = set_player_number()
 initialize(human_number, ai_number)
-while True:  # 게임 진행 : 반복되는 함수들
+while True:
     if is_change_seven_card:
         print(f"7카드에 의해 바뀌어 있는 카드 : {change_card}")
     else:
-         print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
-    if turn == MY_TURN:
-        print("당신의 턴 입니다")
-        print(f"내가 먹어야 하는 카드 장 수 : {decision}")
-        print("내 카드")
-        my_self.print()
-        start_turn(my_self)
-        turn = COM_TURN
-    elif turn == COM_TURN:
-        print("컴퓨터의 턴 입니다")
-        print(f"컴퓨터가 먹어야 하는 카드 장 수 : {decision}")
-        print(f"컴퓨터가 가지고 있는 카드 장 수 : {len(computer.cards)}")
-        computer.print()
-        start_turn(computer)
-        turn = MY_TURN
-    input("넘어가고 싶으면 엔터를 누르세요")
-    os.system("cls")
-    print("----------------------------------------------------------------------------")
-    end_game()
-
-
-
+        print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
+    for j in range(len(play_member)):
+        print(f"{play_member[j].user_name} 의 턴 입니다")
+        print(f"{play_member[j].user_name} 님이 먹어야 하는 카드 장 수")
+        print(f"{play_member[j].user_name} 님의 카드")
+        print(play_member[j].cards)
+        start_turn(play_member[j])
+        input("넘어가고 싶으면 엔터를 누르세요")
+        os.system("cls")
+        print("----------------------------------------------------------------------------")
+        end_game()
