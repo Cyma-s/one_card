@@ -163,6 +163,7 @@ deck = [Card('joker', 'black'), Card('joker', 'color')]  # 게임 시작 초기 
 decision = 0  # 카드몇장인지  결정함
 change_card = None
 is_change_seven_card = False
+is_jump_card = False
 play_member = []
 
 
@@ -246,7 +247,7 @@ def start_turn(player):  # 턴 시작
             player.put_card(shield_card)
             decision = 0
     else:  # 공격받는 상황이 아님
-        global is_change_seven_card
+        global is_change_seven_card, is_jump_card
         if is_change_seven_card:
             available_card = player.return_possible_card(change_card)
         else:
@@ -261,11 +262,7 @@ def start_turn(player):  # 턴 시작
                     if accrue_card[-1].number == 'K':  # 한 번 더함
                         start_turn(player)
                     elif accrue_card[-1].number == 'J':  # <1 : 1 기준> 한 번 더함
-                        start_turn(player)
-                        # available_card = player.return_possible_card(accrue_card[-1])
-                        # player.put_card(available_card)
-                        # todo 턴 점프
-
+                        is_jump_card = True
                     elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
                         pass
             else:  # 특수카드가 아님
@@ -308,6 +305,10 @@ human_number, ai_number = set_player_number()
 initialize(human_number, ai_number)
 while True:
     for member in play_member:
+        if is_jump_card:
+            print(f"카드 'J'에 의해 {member.user_name}의 턴을 건너 뜁니다")
+            is_jump_card = False
+            continue
         show_player_turn()
         if is_change_seven_card:
             print(f"7카드에 의해 바뀌어 있는 카드 : {change_card}")
