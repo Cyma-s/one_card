@@ -91,20 +91,23 @@ class User(Player):  # 플레이어 카드 내기
             return False
         print("카드 한장 먹고 싶으면 100을 입력 하세요")
         while True:
-            my_put_card = int(input("낼 카드를 입력 해주세요 : ")) - 1
-            if my_put_card == 99:  # 100 입력시 한장 먹기
-                self.cards += draw_card(1)
-                print("카드를 내고 싶지 않아 한 장을 먹습니다")
-                return False
-            if my_put_card >= len(self.cards):
-                print("다시 입력 하세요")
+            try:
+                my_put_card = int(input("낼 카드를 입력 해주세요 : ")) - 1
+                if my_put_card == 99:  # 100 입력시 한장 먹기
+                    self.cards += draw_card(1)
+                    print("카드를 내고 싶지 않아 한 장을 먹습니다")
+                    return False
+                if my_put_card >= len(self.cards):
+                    print("다시 입력 하세요")
+                    continue
+                else:  # 낸 카드 손에서 빼서 위에 쌓기
+                    index = self.check_same_card(possible_put_card, my_put_card)
+                    accrue_card.append(self.cards.pop(index))
+                    is_change_seven_card = False
+                    print(f"플레이어가 낸 카드 : {accrue_card[-1]}")
+                    return True
+            except ValueError:
                 continue
-            else:  # 낸 카드 손에서 빼서 위에 쌓기
-                index = self.check_same_card(possible_put_card, my_put_card)
-                accrue_card.append(self.cards.pop(index))
-                is_change_seven_card = False
-                print(f"플레이어가 낸 카드 : {accrue_card[-1]}")
-                return True
 
     def choice_seven_card_shape(self):  # 7내고 모양 선택하기
         global change_card
@@ -166,9 +169,8 @@ play_member = []
 def set_player_number():  # 인원수 정하기
     print("플레이 할 인원을 정합니다")
     print("플레이 인원은 사람과 AI를 합쳐서 2~5명 입니다")
-    print("플레이 할 사람 인원수를 입력해 주세요")
     while True:
-        human = int(input())
+        human = int(input("플레이 할 사람 인원수를 입력해 주세요 "))
         if 1 <= human <= 5:
             break
     print(f"AI 선택 가능한 인원수 : {5 - human}")
@@ -179,7 +181,7 @@ def set_player_number():  # 인원수 정하기
             ai = int(input())
             if 0 <= ai <= (5 - human):
                 break
-    print(f"게임을 플레이 할 총 인원수는 : 사람{human}명, AI {ai}명 입니다")
+    print(f"게임을 플레이 할 총 인원수는 : 사람 {human}명, AI {ai}명 입니다")
     return human, ai
 
 
@@ -194,10 +196,10 @@ def initialize(human, ai):  # 카드 셋팅, 플레이어 셋팅
     random.shuffle(deck)  # 카드 섞기
     accrue_card.append(deck.pop(0))
     for i in range(human):
-        name = input(f'{i}번째 플레이어 이름을 입력해 주세요')
+        name = input(f'{i + 1}번째 플레이어 이름을 입력해 주세요 ')
         play_member.append(User(draw_card(5), name))
     for i in range(ai):
-        name = "ai" + str(i)
+        name = "ai " + str(i + 1)
         play_member.append(Computer(draw_card(5), name))
     random.shuffle(play_member)
 
@@ -262,8 +264,10 @@ def start_turn(player):  # 턴 시작
                         start_turn(player)
                         # available_card = player.return_possible_card(accrue_card[-1])
                         # player.put_card(available_card)
+                        # todo 턴 점프
+
                     elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
-                        pass  # todo
+                        pass
             else:  # 특수카드가 아님
                 if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
                     add_attack_card(accrue_card[-1])  # decision 장 수 추가 -> 턴 넘기기
@@ -279,6 +283,12 @@ def is_attack_situation():  # 공격 상황 확인
         return True
     else:  # 공격받는 상황이 아님
         return False
+
+
+def show_player_turn():
+    print("진행 순서")
+    for i in play_member:
+        print(f"{i.user_name}")
 
 
 def end_game():  # 게임 종료 조건 만들기
@@ -297,16 +307,16 @@ def end_game():  # 게임 종료 조건 만들기
 human_number, ai_number = set_player_number()
 initialize(human_number, ai_number)
 while True:
-    if is_change_seven_card:
-        print(f"7카드에 의해 바뀌어 있는 카드 : {change_card}")
-    else:
-        print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
-    for j in range(len(play_member)):
-        print(f"{play_member[j].user_name} 의 턴 입니다")
-        print(f"{play_member[j].user_name} 님이 먹어야 하는 카드 장 수")
-        print(f"{play_member[j].user_name} 님의 카드")
-        print(play_member[j].cards)
-        start_turn(play_member[j])
+    for member in play_member:
+        show_player_turn()
+        if is_change_seven_card:
+            print(f"7카드에 의해 바뀌어 있는 카드 : {change_card}")
+        else:
+            print(f"맨 위에 있는 카드 : {accrue_card[-1]}")
+        print(f"{member.user_name} 의 턴 입니다")
+        print(f"{member.user_name} 님이 먹어야 하는 카드 장 수 : {decision}")
+        print(f"{member.user_name} 님의 카드 {member.cards}")
+        start_turn(member)
         input("넘어가고 싶으면 엔터를 누르세요")
         os.system("cls")
         print("----------------------------------------------------------------------------")
