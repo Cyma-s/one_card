@@ -221,7 +221,7 @@ def mix_card():  # 쌓인 카드 섞기
     accrue_card = [accrue_card[-1]]
 
 
-def start_turn(player):  # 턴 시작
+def start_turn(player, find_id):  # 턴 시작
     global decision
     choice = 0
     if is_attack_situation():
@@ -318,7 +318,7 @@ while True:
         print(f"{member.user_name} 의 턴 입니다")
         print(f"{member.user_name} 님이 먹어야 하는 카드 장 수 : {decision}")
         print(f"{member.user_name} 님의 카드 {member.cards}")
-        start_turn(member)
+        start_turn(member, play_member.index(member))
         input("넘어가고 싶으면 엔터를 누르세요")
         os.system("cls")
         print("----------------------------------------------------------------------------")
