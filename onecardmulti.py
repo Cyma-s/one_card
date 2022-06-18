@@ -264,7 +264,8 @@ def start_turn(player):  # 턴 시작
                     elif accrue_card[-1].number == 'J':  # <1 : 1 기준> 한 번 더함
                         is_jump_card = True
                     elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
-                        pass
+                        new_play_member = reversed(play_member)
+
             else:  # 특수카드가 아님
                 if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
                     add_attack_card(accrue_card[-1])  # decision 장 수 추가 -> 턴 넘기기
