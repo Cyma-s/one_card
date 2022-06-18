@@ -221,8 +221,8 @@ def mix_card():  # 쌓인 카드 섞기
     accrue_card = [accrue_card[-1]]
 
 
-def start_turn(player, find_id):  # 턴 시작
-    global decision
+def start_turn(player):  # 턴 시작
+    global decision, play_member
     choice = 0
     if is_attack_situation():
         attack_card = player.return_attack_possible_card(accrue_card[-1])
@@ -264,8 +264,10 @@ def start_turn(player, find_id):  # 턴 시작
                     elif accrue_card[-1].number == 'J':  # <1 : 1 기준> 한 번 더함
                         is_jump_card = True
                     elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
-                        new_play_member = reversed(play_member)
-
+                        play_member.reverse()
+                        # 뒤집힌 배열에서의 player가 index가 몇인지 알아내기 -> play_member.index(player)
+                        # play_member를 적절히 슬라이싱해서 새로운 배열을 만들고
+                        # 해당 배열을 play_member 에 대입하기
             else:  # 특수카드가 아님
                 if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
                     add_attack_card(accrue_card[-1])  # decision 장 수 추가 -> 턴 넘기기
@@ -318,7 +320,7 @@ while True:
         print(f"{member.user_name} 의 턴 입니다")
         print(f"{member.user_name} 님이 먹어야 하는 카드 장 수 : {decision}")
         print(f"{member.user_name} 님의 카드 {member.cards}")
-        start_turn(member, play_member.index(member))
+        start_turn(member)
         input("넘어가고 싶으면 엔터를 누르세요")
         os.system("cls")
         print("----------------------------------------------------------------------------")
