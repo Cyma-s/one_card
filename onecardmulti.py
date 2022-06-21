@@ -6,18 +6,18 @@ import random
 
 class Card:  # 색, 모양, 숫자
     attack_card = {'A': 3, '2': 2, 'black': 5, 'color': 7}
-    special_card = {'7': 77, 'J': 15, 'K': 17}  # Q 빠짐
+    special_card = ('7', 'J', 'K', 'Q')
     shape = ('◆', '♠', '♥', '♣')
 
     def __init__(self, shape, number):  # 모양이랑 숫자를 받음
         self.shape = shape  # 모양
         self.number = number  # 숫자
         self.attack = None  # 공격효과
-        self.special = None  # 특수효과
+        self.special = False  # 특수효과
         if self.number in self.attack_card:
             self.attack = self.attack_card[number]
         if self.number in self.special_card:
-            self.special = self.special_card[number]
+            self.special = True
         if shape == '♠' or shape == '♣' or number == "black":  # 색 정하기
             self.color = "black"
         else:
@@ -115,14 +115,17 @@ class User(Player):  # 플레이어 카드 내기
         print("바꿀 모양을 선택해 주세요")
         print("1 : ◆, 2 : ♠, 3 : ♥, 4 : ♣")
         while True:
-            choice_shape = int(input()) - 1
-            if choice_shape > 3 or choice_shape < 0:
-                print("다시 입력해 주세요")
+            try:
+                choice_shape = int(input()) - 1
+                if choice_shape > 3 or choice_shape < 0:
+                    print("다시 입력해 주세요")
+                    continue
+                else:
+                    change_card = Card(Card.shape[choice_shape], '7')
+                    print(f"바뀐 모양 : {change_card}")
+                    break
+            except ValueError:
                 continue
-            else:
-                break
-        change_card = Card(Card.shape[choice_shape], '7')
-        print(f"바뀐 모양 : {change_card}")
 
 
 class Computer(Player):  # 컴퓨터 랜덤 카드 내기
@@ -164,6 +167,7 @@ decision = 0  # 카드몇장인지  결정함
 change_card = None
 is_change_seven_card = False
 is_jump_card = False
+is_back_turn = False
 play_member = []
 
 
@@ -222,7 +226,7 @@ def mix_card():  # 쌓인 카드 섞기
 
 
 def start_turn(player):  # 턴 시작
-    global decision, play_member
+    global decision
     choice = 0
     if is_attack_situation():
         attack_card = player.return_attack_possible_card(accrue_card[-1])
@@ -247,14 +251,14 @@ def start_turn(player):  # 턴 시작
             player.put_card(shield_card)
             decision = 0
     else:  # 공격받는 상황이 아님
-        global is_change_seven_card, is_jump_card
+        global is_change_seven_card, is_jump_card, is_back_turn
         if is_change_seven_card:
             available_card = player.return_possible_card(change_card)
         else:
             available_card = player.return_possible_card(accrue_card[-1])
         is_put_card = player.put_card(available_card)  # 카드 냄
         if is_put_card:  # 카드를 냄
-            if accrue_card[-1].special is not None:  # 맨 위의 카드가 특수카드임
+            if accrue_card[-1].special:  # 맨 위의 카드가 특수카드임
                 if accrue_card[-1].number == '7':  # 일시적으로 모양 바꾸기
                     player.choice_seven_card_shape()
                     is_change_seven_card = True
@@ -264,10 +268,13 @@ def start_turn(player):  # 턴 시작
                     elif accrue_card[-1].number == 'J':  # <1 : 1 기준> 한 번 더함
                         is_jump_card = True
                     elif accrue_card[-1].number == 'Q':  # 턴 거꾸로 돌림
-                        play_member.reverse()
-                        # 뒤집힌 배열에서의 player가 index가 몇인지 알아내기 -> play_member.index(player)
-                        # play_member를 적절히 슬라이싱해서 새로운 배열을 만들고
-                        # 해당 배열을 play_member 에 대입하기
+                        global play_member
+                        r_play_mem = list(reversed(play_member))
+                        member_id = r_play_mem.index(player)
+                        play_member = r_play_mem[member_id:] + r_play_mem[:member_id]
+                        del play_member[0]
+                        play_member.append(player)
+                        is_back_turn = True
             else:  # 특수카드가 아님
                 if accrue_card[-1].attack is not None:  # 낸 카드가 공격카드 일 때
                     add_attack_card(accrue_card[-1])  # decision 장 수 추가 -> 턴 넘기기
@@ -287,8 +294,8 @@ def is_attack_situation():  # 공격 상황 확인
 
 def show_player_turn():
     print("진행 순서")
-    for i in play_member:
-        print(f"{i.user_name}")
+    for member_turn in play_member:
+        print(f"{member_turn.user_name}")
 
 
 def end_game():  # 게임 종료 조건 만들기
@@ -307,10 +314,13 @@ def end_game():  # 게임 종료 조건 만들기
 human_number, ai_number = set_player_number()
 initialize(human_number, ai_number)
 while True:
-    for member in play_member:
-        if is_jump_card:
+    i = 0
+    while i < len(play_member):
+        member = play_member[i]
+        if is_jump_card:  # J 일 경우
             print(f"카드 'J'에 의해 {member.user_name}의 턴을 건너 뜁니다")
             is_jump_card = False
+            i += 1
             continue
         show_player_turn()
         if is_change_seven_card:
@@ -325,4 +335,8 @@ while True:
         os.system("cls")
         print("----------------------------------------------------------------------------")
         end_game()
+        i += 1
+        if is_back_turn:
+            i = 0
+
 
