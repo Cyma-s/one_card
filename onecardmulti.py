@@ -183,19 +183,15 @@ def set_player_number():  # 인원수 정하기
     print("플레이 할 인원을 정합니다")
     print("플레이 인원은 사람과 AI를 합쳐서 2~5명 입니다")
     while True:
-        human = int(input("플레이 할 사람 인원수를 입력해 주세요 "))
-        if 1 <= human <= 5:
-            break
-    print(f"AI 선택 가능한 인원수 : {5 - human}")
-    if human == 5:
-        ai = 0
-    else:
-        while True:
-            ai = int(input())
-            if 0 <= ai <= (5 - human):
-                break
-    print(f"게임을 플레이 할 총 인원수는 : 사람 {human}명, AI {ai}명 입니다")
-    return human, ai
+        try:
+            human = int(input("플레이 할 사람 인원수를 입력해 주세요 "))
+            ai = int(input("추가할 AI 수 : "))
+            if 1 <= human <= 5 and  0 <= ai <= (5 - human):
+                print(f"게임을 플레이 할 총 인원수는 : 사람 {human}명, AI {ai}명 입니다")
+                return human, ai
+        except ValueError:
+            print("숫자 이외의 값이 입력 되었습니다")
+            continue
 
 
 def initialize(human, ai):  # 카드 셋팅, 플레이어 셋팅
