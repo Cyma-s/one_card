@@ -107,6 +107,10 @@ class User(Player):  # 플레이어 카드 내기
                     print(f"플레이어가 낸 카드 : {accrue_card[-1]}")
                     return True
             except IndexError:
+                print("범위 밖의 값이 입력 되었습니다")
+                continue
+            except ValueError:
+                print("숫자 이외의 값이 입력 되었습니다")
                 continue
 
     def choice_seven_card_shape(self):  # 7내고 모양 선택하기
@@ -124,7 +128,11 @@ class User(Player):  # 플레이어 카드 내기
                     change_card = Card(Card.shape[choice_shape], '7')
                     print(f"바뀐 모양 : {change_card}")
                     break
+            except IndexError:
+                print("범위 밖의 값이 입력 되었습니다")
+                continue
             except ValueError:
+                print("숫자 이외의 값이 입력 되었습니다")
                 continue
 
 
