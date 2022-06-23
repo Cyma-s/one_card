@@ -106,7 +106,7 @@ class User(Player):  # 플레이어 카드 내기
                     is_change_seven_card = False
                     print(f"플레이어가 낸 카드 : {accrue_card[-1]}")
                     return True
-            except ValueError:
+            except IndexError:
                 continue
 
     def choice_seven_card_shape(self):  # 7내고 모양 선택하기
