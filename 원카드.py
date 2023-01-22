@@ -1,5 +1,6 @@
 # ◆ ♠ ♥ ♣ / A 2 3 4 5 6 7 8 9 10 J Q K joker(black,color) 54장
 # A◆
+import os
 import random
 
 
@@ -279,5 +280,7 @@ while True:  # 게임 진행 : 반복되는 함수들
         computer.print()
         start_turn(computer)
         turn = MY_TURN
+    input("넘어가고 싶으면 엔터를 누르세요")
+    os.system("cls")
     print("----------------------------------------------------------------------------")
     end_game()
